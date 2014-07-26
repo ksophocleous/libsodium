@@ -7,29 +7,16 @@ os:
 compiler:
  - clang
  - gcc
- - g++
 
 before_script:
- - ./autogen.sh
+ - if [[ $(cmake --version) =~ ([0-9][.][0-9][.][0-9]) ]] && dpkg --compare-versions ${BASH_REMATCH[1]} lt 3.1.0; then UPGRADE="YES"; else UPGRADE=""; fi
+ - if [ "$UPGRADE" == "YES" ] && [ "$(uname -m)" == "x86_64" ]; then wget http://www.cmake.org/files/v3.1/cmake-3.1.0-Linux-x86_64.tar.gz && sudo tar -xf cmake-3.1.0-Linux-x86_64.tar.gz -C /usr --strip-components=1; fi
+ - if [ "$UPGRADE" == "YES" ] && [ "$(uname -m)" != "x86_64" ]; then wget http://www.cmake.org/files/v3.1/cmake-3.1.0-Linux-i386.tar.gz && sudo tar -xf cmake-3.1.0-Linux-i386.tar.gz -C /usr --strip-components=1; fi
+ - rm -f cmake-3.1.0-Linux-*.tar.gz
 
 script:
- - ./configure --disable-dependency-tracking
- - make distcheck
- - make distclean
- - ./configure --disable-dependency-tracking --enable-minimal
- - make distcheck
-
-env:
-  global:
-   - secure: "P4qv8aX+nogLlSy0lTMDIR6I5OLXq+qMijB4s+oCLME5BL2xPAn3v0QG5IoHdnU0ncRc1tEYZxN3F48Rp+Q7+wEVqSBLFS3oXzfNHJGEYoiaAcPNWO0R1kF8rcy8AuoAEomNeYS+5vhzQtaXklNtx/250p6MgGuMsdpMsRUKS/U="
-
-addons:
-  coverity_scan:
-    project:
-      name: jedisct1/libsodium
-      version: 1.0.3
-      description: libsodium
-      notification_email: coverityscan@pureftpd.org
-      build_command_prepend: ./autogen.sh ; ./configure
-      build_command: make -j4
-      branch_pattern: coverity_scan
+ - rm -rf CMakeCache.txt
+ - mkdir -p build/debug build/release
+ - (cd build/release && cmake -DLIBSODIUM_BUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Release ../..)
+ - (cd build/release && cmake --build . --config Release)
+ - (cd build/release && ctest)
