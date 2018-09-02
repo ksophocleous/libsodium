@@ -444,7 +444,7 @@ install(FILES "${CMAKE_BINARY_DIR}/include/sodium/version.h"
 	DESTINATION "include/sodium" COMPONENT dev)
 
 install(EXPORT ${CMAKE_PROJECT_NAME}Config
-	DESTINATION lib/cmake)
+	DESTINATION cmake)
 
 ### TESTS
 if(BUILD_TESTS)
